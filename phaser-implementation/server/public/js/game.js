@@ -58,7 +58,17 @@ function displayPlayers(self, playerInfo, sprite) {
 }
 
 function displayMap(self, mapInfo) {
-  mapInfo.nodes.forEach(element => {
-    var circle = new Phaser.Geom.Circle(mapInfo.positions.element[0], mapInfo.positions.element[1], 0.5);
+  var colour = Phaser.Display.Color.GetColor(0, 255, 0);
+  var graphics = self.add.graphics();
+  graphics.fillStyle(colour, 1.0);
+  graphics.lineStyle(1, colour, 1.0);
+  Object.keys(mapInfo.positions).forEach(function(key) {
+    var x = mapInfo.positions[key][0];
+    var y = mapInfo.positions[key][1];
+
+    var circle = new Phaser.Geom.Circle(x, y, 5);
+    graphics.strokeCircleShape(circle);
+    graphics.fillCircleShape(circle);
+    console.log(circle);
   });
 }

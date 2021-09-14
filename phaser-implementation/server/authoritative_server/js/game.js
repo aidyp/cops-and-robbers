@@ -18,6 +18,8 @@ const config = {
     }
 };
 
+/* I don't want to hardcode this, would be cool to put it in DynamoDB */
+
 const mapInfo = {
     nodes: [0,1,2,3],
     edges: [(0,1),(1,2),(2,3)],
