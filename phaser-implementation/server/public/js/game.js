@@ -17,9 +17,11 @@ var phaser_render_config = {
     blue: 0x0000FF,
     green: 0x00FF00,
     yellow: 0xFFFF00,
+    red: 0xFF0000,
     white: 0xFFFFFF,
   },
-  node_size: 5
+  node_size: 5,
+  line_width: 2
 };
 
 class NetworkMapGUI {
@@ -30,10 +32,13 @@ class NetworkMapGUI {
     this.cop = 0;
     this.robber = 3;
     this.honey = 2;
+
+    // Want to write a data structure that keeps track of the graphics
+
   }
 
   scale_node_position(node_position, width, height) {
-    var scaled_positions = [(node_position[0] + width) / 2, (node_position[1] + height) / 2];
+    var scaled_positions = [(node_position[0] * width), (node_position[1] * height)];
     return scaled_positions;
   }
 
@@ -46,9 +51,9 @@ class NetworkMapGUI {
 
   select_node_colour(node) {
     /* Selects node colour based on node type */
-    if (node === this.robber) return phaser_render_config.colours.green;
-    if (node === this.cop) return phaser_render_config.colours.red; 
-    if (node === this.honey) return phaser_render_config.colours.yellow;
+    if (node == this.robber) return phaser_render_config.colours.green;
+    if (node == this.cop) return phaser_render_config.colours.red; 
+    if (node == this.honey) return phaser_render_config.colours.yellow;
     return phaser_render_config.colours.white;
   }
 
@@ -60,11 +65,26 @@ class NetworkMapGUI {
       [x, y] = this.scale_node_position(this.map.positions[key], config.width, config.height);
       var circle = new Phaser.Geom.Circle(x, y, this.render_config.node_size);  
       var node_colour = this.select_node_colour(key);
+      console.log(node_colour);
       this.graphics.fillStyle(node_colour, 1.0)
       this.graphics.lineStyle(1, node_colour, 1.0);
       this.graphics.strokeCircleShape(circle);
       this.graphics.fillCircleShape(circle);
     }.bind(this));   
+
+    // Draw the connection between the nodes.
+    this.map.edges.forEach(function (edge) {
+      var line_colour = phaser_render_config.colours.white;
+      console.log(edge);
+      let x1, y1, x2, y2;
+      [x1, y1] = this.scale_node_position(this.map.positions[edge[0]], config.width, config.height);
+      [x2, y2] = this.scale_node_position(this.map.positions[edge[1]], config.width, config.height);
+      console.log(x1, y1, x2, y2);
+      this.graphics.lineStyle(phaser_render_config.line_width, line_colour, 1);
+      this.graphics.lineBetween(x1, y1, x2, y2);
+    }.bind(this));
+
+    /* TO DO: use the layers feature in Phaser to draw these things */
   }
 }
 
