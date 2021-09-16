@@ -28,6 +28,11 @@ const mapInfo = {
         1: [0.1,0.9],
         2: [0.9,0.1],
         3: [0.9,0.9]
+    },
+    characters: {
+        cop: 0,
+        robber: 1,
+        honey: 2
     }
 };
 

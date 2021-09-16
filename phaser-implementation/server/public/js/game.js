@@ -12,7 +12,8 @@ var config = {
 };
 var game = new Phaser.Game(config);
 
-var phaser_render_config = {
+/* Rendering constants for drawing */
+var PHASER_RENDER_CONFIG = {
   colours: {
     blue: 0x0000FF,
     green: 0x00FF00,
@@ -24,18 +25,24 @@ var phaser_render_config = {
   line_width: 2
 };
 
+const PLAYER = {
+  COP: 0,
+  ROBBER: 1
+};
+
 class NetworkMapGUI {
-  constructor(map_info, render_config, graphics) {
+  constructor(map_info, graphics, player) {
+    /* Local references for methods */
     this.map = map_info;
     this.graphics = graphics;
-    this.render_config = render_config;
-    this.cop = 0;
-    this.robber = 3;
-    this.honey = 2;
-
-    // Want to write a data structure that keeps track of the graphics
-
+    this.player = player;
   }
+
+  // Write a setter for the map_info 
+  set map_properties(map_info) {
+    this.map = map_info;
+  }
+
 
   scale_node_position(node_position, width, height) {
     var scaled_positions = [(node_position[0] * width), (node_position[1] * height)];
@@ -51,10 +58,10 @@ class NetworkMapGUI {
 
   select_node_colour(node) {
     /* Selects node colour based on node type */
-    if (node == this.robber) return phaser_render_config.colours.green;
-    if (node == this.cop) return phaser_render_config.colours.red; 
-    if (node == this.honey) return phaser_render_config.colours.yellow;
-    return phaser_render_config.colours.white;
+    if (node == this.map.characters.cop) return PHASER_RENDER_CONFIG.colours.green;
+    if (node == this.map.characters.robber) return PHASER_RENDER_CONFIG.colours.red; 
+    if (node == this.map.characters.honey) return PHASER_RENDER_CONFIG.colours.yellow;
+    return PHASER_RENDER_CONFIG.colours.white;
   }
 
   display_map() {
@@ -63,7 +70,7 @@ class NetworkMapGUI {
     Object.keys(this.map.positions).forEach(function(key) {
       let x, y;
       [x, y] = this.scale_node_position(this.map.positions[key], config.width, config.height);
-      var circle = new Phaser.Geom.Circle(x, y, this.render_config.node_size);  
+      var circle = new Phaser.Geom.Circle(x, y, PHASER_RENDER_CONFIG.node_size);  
       var node_colour = this.select_node_colour(key);
       console.log(node_colour);
       this.graphics.fillStyle(node_colour, 1.0)
@@ -74,13 +81,13 @@ class NetworkMapGUI {
 
     // Draw the connection between the nodes.
     this.map.edges.forEach(function (edge) {
-      var line_colour = phaser_render_config.colours.white;
+      var line_colour = PHASER_RENDER_CONFIG.colours.white;
       console.log(edge);
       let x1, y1, x2, y2;
       [x1, y1] = this.scale_node_position(this.map.positions[edge[0]], config.width, config.height);
       [x2, y2] = this.scale_node_position(this.map.positions[edge[1]], config.width, config.height);
       console.log(x1, y1, x2, y2);
-      this.graphics.lineStyle(phaser_render_config.line_width, line_colour, 1);
+      this.graphics.lineStyle(PHASER_RENDER_CONFIG.line_width, line_colour, 1);
       this.graphics.lineBetween(x1, y1, x2, y2);
     }.bind(this));
 
@@ -125,7 +132,7 @@ function create() {
   });
 
   this.socket.on('newMap', function (mapInfo) {
-    const network_map = new NetworkMapGUI(mapInfo, phaser_render_config, graphics);
+    const network_map = new NetworkMapGUI(mapInfo, graphics);
     network_map.display_map();
   })
 }
