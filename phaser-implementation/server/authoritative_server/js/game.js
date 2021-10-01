@@ -94,5 +94,13 @@ function removePlayer(self, playerId) {
         }
     });
 }
+
+function validate_move() {
+    // Server side code to validate that the move submitted is legal
+}
+
+function process_turn() {
+    // Processes the submitted move 
+}
 const game = new Phaser.Game(config);
 window.gameLoaded();

@@ -33,35 +33,41 @@ const PLAYER = {
 };
 
 
+// Implementing as a class in case I need to do something later
+class EdgeGraphic extends Phaser.GameObjects.Line {
+  constructor(scene, x, y, x1, y1, x2, y2, strokeColor) {
+    super (scene, x, y, x1, y1, x2, y2, strokeColor);
+    scene.add.existing(this);
+  }
+}
 
 class NodeGraphic extends Phaser.GameObjects.Arc {
   constructor(scene, node_id, x, y, radius, fillColor, fillAlpha) {    
     super(scene, x, y, radius, 0, 360, false, fillColor, fillAlpha);    
-    this.node_id = node_id;
+    this.node_id = Number(node_id); // For type consistency
     scene.add.existing(this);
     this.setInteractive({ useHandCursor: true})
     .on('pointerdown', () => this.on_node_click() );
   }
   
-  get nodeID() {
-    return this.node_id;
-  }
-
   on_node_click() {
     eventsRouter.emit('node_clicked', this.node_id);
   }
-
-  // Use events emitters?
-  
-
 }
+
+/*
+class EdgeGraphic extends Phaser.GameObjects.Line {
+  constructor(scene, )
+}
+*/
 
 // Rewrite of the MapGraphic class 
 class MapGraphic {
   constructor(scene, map_info, player) {
     this.scene = scene;
     this.map = map_info;
-    this.player = player;
+    this.player = Number(player);
+    this.move_state = [];
 
     // Create listeners <-- Clean this up eventually
     eventsRouter.on('node_clicked', this.handle_node_click, this);
@@ -84,6 +90,16 @@ class MapGraphic {
     console.log('Finished Drawing Nodes')
 
     console.log('Drawing Edges');
+    let left, right, x1, y1, x2, y2;
+    for (var i = 0; i < this.map.edges.length; i++) {
+      var edge = this.map.edges[i];
+      [left, right] = edge;
+      console.log(left, right);
+      [x1, y1] = this.scale_node_position(this.map.positions[left], config.width, config.height);
+      [x2, y2] = this.scale_node_position(this.map.positions[right], config.width, config.height);
+      var drawn_edge = new EdgeGraphic(this.scene, 0.5, 0.5, x1, y1, x2, y2, PHASER_RENDER_CONFIG.colours.white);
+    }
+    console.log('Finished Drawing Edges');
 
   }
 
@@ -94,14 +110,30 @@ class MapGraphic {
 
   handle_node_click(node_id) {
     // Check if a an edge exists
-    console.log(node_id);
+    if (this.check_edge_exists(this.player, node_id)) {
+      // Create & propose a move
+      var proposed_move = [this.player, node_id];
+      proposed_move(proposed_move);
+    }
   }
 
-  propose_move() {
+  propose_move(move) {
     // Graphically represent the proposed move, and emit a proposed move event
+    
+    // The edge exists due to check_edge_exists() being called before this function
+        
+
   }
 
   check_edge_exists(node_1, node_2) {
+
+    for (var i = 0; i < this.map.edges.length; i++) {
+      var edge = this.map.edges[i];
+      if (edge.includes(node_1) && edge.includes(node_2)) {
+        return true;
+      }
+    }
+    return false;
 
   }
 
