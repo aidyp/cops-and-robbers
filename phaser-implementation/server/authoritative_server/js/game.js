@@ -18,7 +18,7 @@ const config = {
     }
 };
 
-/* I don't want to hardcode this, would be cool to put it in DynamoDB */
+/* I don't want to hardcode this, would be cool to put it in a database */
 
 const mapInfo = {
     nodes: [0,1,2,3],
@@ -36,17 +36,23 @@ const mapInfo = {
     }
 };
 
+
+
 const players = {};
 
 function preload() {
     // Load assets
     this.load.image('ship', 'assets/spaceShips_001.png');
 }
+
+
+
 function create() {
     const self = this;
     this.players = this.physics.add.group();
     io.on('connection', function (socket) {
         console.log('a user connected');
+
         players[socket.id] = {
             rotation: 0,
             x: Math.floor(Math.random() * 700) + 50,
@@ -54,15 +60,28 @@ function create() {
             playerId: socket.id,
             team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue'
         };
-        // Add player to the server
-        addPlayer(self, players[socket.id]);
-        // Send player object to the new player
-        socket.emit('currentPlayers', players);
-        // update all other players of the new player
-        socket.broadcast.emit('newPlayer', players[socket.id]);
-        // Send the map 
-        socket.emit('newMap', mapInfo);
+        // Check the number of players
+        if (checkPlayers(self)) {
+            // Create a player object <-- going to cheat here
+            players[socket.id] = {
+                rotation: 0,
+                x: 0,
+                y: 0,
+                playerId: socket.id,
+                team: 0
+            }
 
+            // Add player to the server
+            addPlayer(self, players[socket.id]);
+            // Send player object to the new player
+            socket.emit('currentPlayers', players);
+            // update all other players of the new player
+            socket.broadcast.emit('newPlayer', players[socket.id]);
+            // Send the map 
+            socket.emit('newMap', mapInfo);            
+        }
+
+    
         // Disconnection event
         socket.on('disconnect', function () {
             console.log('user disconnected');
@@ -84,6 +103,8 @@ function addPlayer(self, playerInfo){
     player.setAngularDrag(100);
     player.setMaxVelocity(200);
     player.playerId = playerInfo.playerId;
+
+    // Set the team here
     self.players.add(player);
 }
 
@@ -93,6 +114,12 @@ function removePlayer(self, playerId) {
             player.destroy();
         }
     });
+}
+
+function checkPlayers(self) {
+    // Get the number of players 
+    var num_players = self.players.getChildren().length;
+    return (num_players < 2);
 }
 
 function validate_move() {

@@ -24,7 +24,11 @@ var PHASER_RENDER_CONFIG = {
     white: 0xFFFFFF,
   },
   node_size: 5,
-  line_width: 2
+  line_width: 2,
+  image_centre: {
+    x: 0,
+    y: 0
+  }
 };
 
 const PLAYER = {
@@ -33,11 +37,12 @@ const PLAYER = {
 };
 
 
-// Implementing as a class in case I need to do something later
+
 class EdgeGraphic extends Phaser.GameObjects.Line {
   constructor(scene, x, y, x1, y1, x2, y2, strokeColor) {
     super (scene, x, y, x1, y1, x2, y2, strokeColor);
     scene.add.existing(this);
+    this.setDisplayOrigin(0, 0); //Set the origin here to make it work, no idea why
   }
 }
 
@@ -55,19 +60,17 @@ class NodeGraphic extends Phaser.GameObjects.Arc {
   }
 }
 
-/*
-class EdgeGraphic extends Phaser.GameObjects.Line {
-  constructor(scene, )
-}
-*/
-
 // Rewrite of the MapGraphic class 
 class MapGraphic {
   constructor(scene, map_info, player) {
     this.scene = scene;
     this.map = map_info;
-    this.player = Number(player);
+    this.player = Number(player); //Keys are integers at the moment, so cast
     this.move_state = [];
+
+    // Initialise arrays of game objects
+    this.node_graphics = [];
+    this.edge_graphics = [];
 
     // Create listeners <-- Clean this up eventually
     eventsRouter.on('node_clicked', this.handle_node_click, this);
@@ -85,11 +88,13 @@ class MapGraphic {
     Object.keys(this.map.positions).forEach(function(key) {
       let x, y;
       [x, y] = this.scale_node_position(this.map.positions[key], config.width, config.height);
-      var circle = new NodeGraphic(this.scene, key, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1)
+      console.log(x, y);
+      var circle = new NodeGraphic(this.scene, key, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1);
+      this.node_graphics.push(circle);
     }.bind(this));
-    console.log('Finished Drawing Nodes')
+    
 
-    console.log('Drawing Edges');
+    // Create the edges
     let left, right, x1, y1, x2, y2;
     for (var i = 0; i < this.map.edges.length; i++) {
       var edge = this.map.edges[i];
@@ -97,33 +102,56 @@ class MapGraphic {
       console.log(left, right);
       [x1, y1] = this.scale_node_position(this.map.positions[left], config.width, config.height);
       [x2, y2] = this.scale_node_position(this.map.positions[right], config.width, config.height);
-      var drawn_edge = new EdgeGraphic(this.scene, 0.5, 0.5, x1, y1, x2, y2, PHASER_RENDER_CONFIG.colours.white);
+      console.log(x1, y1, x2, y2);
+      // Set the game object to the centre of the screen <-- figure out why!
+      var drawn_edge = new EdgeGraphic(this.scene, 
+        PHASER_RENDER_CONFIG.image_centre.x, 
+        PHASER_RENDER_CONFIG.image_centre.y, 
+        x1, 
+        y1, 
+        x2, 
+        y2, 
+        PHASER_RENDER_CONFIG.colours.white);
+        this.edge_graphics.push(drawn_edge);
     }
     console.log('Finished Drawing Edges');
 
+    console.log('Colouring Nodes');
+    this.node_graphics[this.map.characters.cop].setFillStyle(PHASER_RENDER_CONFIG.colours.green, 1);
+    this.node_graphics[this.map.characters.robber].setFillStyle(PHASER_RENDER_CONFIG.colours.red, 1);
+    this.node_graphics[this.map.characters.honey].setFillStyle(PHASER_RENDER_CONFIG.colours.yellow, 1);
+
+
   }
 
-  update_map(move) {
 
-    // Updates the map with a move order issued by server
-  }
 
   handle_node_click(node_id) {
     // Check if a an edge exists
     if (this.check_edge_exists(this.player, node_id)) {
       // Create & propose a move
       var proposed_move = [this.player, node_id];
-      proposed_move(proposed_move);
+      this.propose_move(proposed_move);
     }
   }
 
   propose_move(move) {
-    // Graphically represent the proposed move, and emit a proposed move event
-    
-    // The edge exists due to check_edge_exists() being called before this function
-        
 
+    // Clear the current move if it exists
+    console.log(this.move_state);
+    if (this.move_state.length === 1) {
+      var old_move = this.move_state[0];
+      this.move_state.pop();
+      // Get current colour of the node
+      var base_colour = this.node_graphics[old_move[1]].fillColor;
+      this.node_graphics[old_move[1]].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, base_colour, 1);      
+      }
+    // Draw the current move 
+    this.node_graphics[move[1]].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, PHASER_RENDER_CONFIG.colours.green, 1);
+    this.move_state.push(move);
   }
+
+
 
   check_edge_exists(node_1, node_2) {
 
@@ -149,6 +177,7 @@ function create() {
   var graphics = this.add.graphics();
   this.socket = io();
   this.players = this.add.group();
+  let team;
   
   this.socket.on('currentPlayers', function(players) {
     Object.keys(players).forEach(function (id) {
@@ -173,7 +202,7 @@ function create() {
   });
 
   this.socket.on('newMap', function (mapInfo) {
-    const network_map = new MapGraphic(self, mapInfo, 0);
+    const network_map = new MapGraphic(self, mapInfo, 1);
     network_map.initialise_map();
   })
 }
