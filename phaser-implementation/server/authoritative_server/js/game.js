@@ -36,9 +36,14 @@ const mapInfo = {
     }
 };
 
-
-
-const players = {};
+const PLAYERS = {
+    COP: 0,
+    ROB: 1
+};
+// Required for assigning teams at the moment
+var COP_PLAYER_ASSIGNED = false;
+var ROB_PLAYER_ASSIGNED = false;
+players = {};
 
 function preload() {
     // Load assets
@@ -52,14 +57,6 @@ function create() {
     this.players = this.physics.add.group();
     io.on('connection', function (socket) {
         console.log('a user connected');
-
-        players[socket.id] = {
-            rotation: 0,
-            x: Math.floor(Math.random() * 700) + 50,
-            y: Math.floor(Math.random() * 500) + 50,
-            playerId: socket.id,
-            team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue'
-        };
         // Check the number of players
         if (checkPlayers(self)) {
             // Create a player object <-- going to cheat here
@@ -69,11 +66,11 @@ function create() {
                 y: 0,
                 playerId: socket.id,
                 team: 0
-            }
+            };
 
             // Add player to the server
             addPlayer(self, players[socket.id]);
-            // Send player object to the new player
+            // Send players object to the new player
             socket.emit('currentPlayers', players);
             // update all other players of the new player
             socket.broadcast.emit('newPlayer', players[socket.id]);
@@ -105,12 +102,19 @@ function addPlayer(self, playerInfo){
     player.playerId = playerInfo.playerId;
 
     // Set the team here
+    player.team = setTeam();
+    // Dirty hack until I fix the object duplication
+    playerInfo.team = player.team;
     self.players.add(player);
 }
 
 function removePlayer(self, playerId) {
     self.players.getChildren().forEach((player) => {
         if (playerId === player.playerId) {
+            // Set the flags so that the player can be re-assigned
+            console.log(player.team);
+            if (player.team === PLAYERS.COP) {COP_PLAYER_ASSIGNED = false;}
+            if (player.team === PLAYERS.ROB) {ROB_PLAYER_ASSIGNED = false;}
             player.destroy();
         }
     });
@@ -121,13 +125,17 @@ function checkPlayers(self) {
     var num_players = self.players.getChildren().length;
     return (num_players < 2);
 }
-
-function validate_move() {
-    // Server side code to validate that the move submitted is legal
-}
-
-function process_turn() {
-    // Processes the submitted move 
+/* Sets the team of the player. Stub for now */
+function setTeam(self) {
+    if (!(COP_PLAYER_ASSIGNED)) {
+        COP_PLAYER_ASSIGNED = true; 
+        return PLAYERS.COP;
+    }
+    if (!(ROB_PLAYER_ASSIGNED)) {
+        ROB_PLAYER_ASSIGNED = true;
+        return PLAYERS.ROB;
+    }
+    
 }
 const game = new Phaser.Game(config);
 window.gameLoaded();

@@ -1,3 +1,5 @@
+import { CommitButton } from '../js/scenes/commitButton.js'
+
 /* Phaser Config setup */
 var config = {
   type: Phaser.AUTO,
@@ -38,6 +40,13 @@ const PLAYER = {
 
 
 
+class PlayerInfo extends Phaser.GameObjects.Text {
+  constructor(scene, x, y, text, style) {
+    super(scene, x, y, text, style);
+    scene.add.existing(this);
+  }
+}
+
 class EdgeGraphic extends Phaser.GameObjects.Line {
   constructor(scene, x, y, x1, y1, x2, y2, strokeColor) {
     super (scene, x, y, x1, y1, x2, y2, strokeColor);
@@ -74,6 +83,17 @@ class MapGraphic {
 
     // Create listeners <-- Clean this up eventually
     eventsRouter.on('node_clicked', this.handle_node_click, this);
+
+    // Render relevant information to player
+    this.print_out_info();
+    this.button = new CommitButton(this.scene);
+    console.log(this.button);
+  }
+
+  print_out_info() {
+    var msg_str = "You are player: ".concat(String(this.player));
+    console.log(msg_str);
+    var text = new PlayerInfo(this.scene, 10, 10, msg_str);
   }
 
   scale_node_position(node_position, width, height) {
@@ -183,6 +203,7 @@ function create() {
     Object.keys(players).forEach(function (id) {
       if (players[id].playerId === self.socket.id) {
         displayPlayers(self, players[id], 'ship');
+        team = players[id].team;
       } else {
         displayPlayers(self, players[id], 'otherPlayer');
       }
@@ -202,7 +223,7 @@ function create() {
   });
 
   this.socket.on('newMap', function (mapInfo) {
-    const network_map = new MapGraphic(self, mapInfo, 1);
+    const network_map = new MapGraphic(self, mapInfo, team);
     network_map.initialise_map();
   })
 }
