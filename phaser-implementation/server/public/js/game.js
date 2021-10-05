@@ -1,6 +1,6 @@
 import { CommitButton } from '../js/scenes/commitButton.js'
 import { eventsRouter } from '../js/scenes/eventsRouter.js'
-import { PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic } from './scenes/graphicsObjects.js';
+import { PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI } from './scenes/graphicsObjects.js';
 
 /* Phaser Config setup */
 var config = {
@@ -14,22 +14,15 @@ var config = {
     update: update
   }
 };
-// Create an eventsCenter. Eventually split this up 
 var game = new Phaser.Game(config);
+
+
 
 const PLAYER = {
   COP: 0,
   ROBBER: 1
 };
 
-/* Classes will be moved to seperate files eventually, but for now they are here */
-
-class PlayerInfo extends Phaser.GameObjects.Text {
-  constructor(scene, x, y, text, style) {
-    super(scene, x, y, text, style);
-    scene.add.existing(this);
-  }
-}
 
 
 
@@ -43,6 +36,21 @@ class SocketHandler {
     this.socket.emit('move_confirmed', {x: move});
   }
 
+}
+
+class ClientGameController {
+  constructor(scene, socket, map_info, player) {
+    this.scene = scene; 
+    this.mapInfo = map_info;
+    this.player = Number(player);
+    this.move_state = [];
+    this.map_gui = new MapGUI(this.scene, this.mapInfo);
+
+    // Create listeners, and handle them in this game controller 
+    eventsRouter.on('node_clicked', this.handle_node_click, this); // Emitted by NodeGraphics
+    eventsRouter.on('move_confirmed', this.confirm_move, this); // Emitted by CommitButton
+
+  }
 }
 
 // Rewrite of the MapGraphic class 
@@ -204,6 +212,10 @@ function create() {
   this.socket.on('newMap', function (mapInfo) {
     const network_map = new MapGraphic(self, mapInfo, team);
     network_map.initialise_map();
+  })
+
+  this.socket.on('newMove', function (move) {
+    network_map.update(move);
   })
 }
 

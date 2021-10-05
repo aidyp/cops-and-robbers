@@ -19,6 +19,14 @@ var PHASER_RENDER_CONFIG = {
     height: 600
 };
 
+class PlayerInfo extends Phaser.GameObjects.Text {
+    constructor(scene, x, y, text, style) {
+      super(scene, x, y, text, style);
+      scene.add.existing(this);
+    }
+  }
+  
+
 class EdgeGraphic extends Phaser.GameObjects.Line {
     constructor(scene, x, y, x1, y1, x2, y2, strokeColor) {
       super (scene, x, y, x1, y1, x2, y2, strokeColor);
@@ -101,5 +109,5 @@ class MapGUI {
     }
 }
 
-export {PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic};
+export {PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI};
 
