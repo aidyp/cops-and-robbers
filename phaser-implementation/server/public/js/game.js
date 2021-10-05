@@ -1,11 +1,13 @@
 import { CommitButton } from '../js/scenes/commitButton.js'
+import { eventsRouter } from '../js/scenes/eventsRouter.js'
+import { PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic } from './scenes/graphicsObjects.js';
 
 /* Phaser Config setup */
 var config = {
   type: Phaser.AUTO,
   parent: 'phaser-example',
-  width: 800,
-  height: 600,
+  width: PHASER_RENDER_CONFIG.width,
+  height: PHASER_RENDER_CONFIG.height,
   scene: {
     preload: preload,
     create: create,
@@ -13,32 +15,14 @@ var config = {
   }
 };
 // Create an eventsCenter. Eventually split this up 
-const eventsRouter = new Phaser.Events.EventEmitter();
 var game = new Phaser.Game(config);
-
-/* Rendering constants for drawing */
-var PHASER_RENDER_CONFIG = {
-  colours: {
-    blue: 0x0000FF,
-    green: 0x00FF00,
-    yellow: 0xFFFF00,
-    red: 0xFF0000,
-    white: 0xFFFFFF,
-  },
-  node_size: 5,
-  line_width: 2,
-  image_centre: {
-    x: 0,
-    y: 0
-  }
-};
 
 const PLAYER = {
   COP: 0,
   ROBBER: 1
 };
 
-
+/* Classes will be moved to seperate files eventually, but for now they are here */
 
 class PlayerInfo extends Phaser.GameObjects.Text {
   constructor(scene, x, y, text, style) {
@@ -47,26 +31,18 @@ class PlayerInfo extends Phaser.GameObjects.Text {
   }
 }
 
-class EdgeGraphic extends Phaser.GameObjects.Line {
-  constructor(scene, x, y, x1, y1, x2, y2, strokeColor) {
-    super (scene, x, y, x1, y1, x2, y2, strokeColor);
-    scene.add.existing(this);
-    this.setDisplayOrigin(0, 0); //Set the origin here to make it work, no idea why
-  }
-}
 
-class NodeGraphic extends Phaser.GameObjects.Arc {
-  constructor(scene, node_id, x, y, radius, fillColor, fillAlpha) {    
-    super(scene, x, y, radius, 0, 360, false, fillColor, fillAlpha);    
-    this.node_id = Number(node_id); // For type consistency
-    scene.add.existing(this);
-    this.setInteractive({ useHandCursor: true})
-    .on('pointerdown', () => this.on_node_click() );
+
+class SocketHandler {
+  constructor(socket) {
+    this.socket = socket;
+    eventsRouter.on('prepare_confirm_move', this.send_move_info, this);
   }
-  
-  on_node_click() {
-    eventsRouter.emit('node_clicked', this.node_id);
+
+  send_move_info(move) {
+    this.socket.emit('move_confirmed', {x: move});
   }
+
 }
 
 // Rewrite of the MapGraphic class 
@@ -82,7 +58,8 @@ class MapGraphic {
     this.edge_graphics = [];
 
     // Create listeners <-- Clean this up eventually
-    eventsRouter.on('node_clicked', this.handle_node_click, this);
+    eventsRouter.on('node_clicked', this.handle_node_click, this); // Emitted by NodeGraphics
+    eventsRouter.on('move_confirmed', this.confirm_move, this); // Emitted by CommitButton
 
     // Render relevant information to player
     this.print_out_info();
@@ -144,7 +121,9 @@ class MapGraphic {
 
   }
 
+  confirm_move() {
 
+  }
 
   handle_node_click(node_id) {
     // Check if a an edge exists

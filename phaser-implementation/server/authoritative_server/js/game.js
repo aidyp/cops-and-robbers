@@ -65,7 +65,8 @@ function create() {
                 x: 0,
                 y: 0,
                 playerId: socket.id,
-                team: 0
+                team: 0,
+                move: [0,0]
             };
 
             // Add player to the server
@@ -87,7 +88,11 @@ function create() {
             // emit a message to trigger removal
             socket.broadcast.emit('deletePlayer', socket.id);
         });
-        // Create a player object
+
+        socket.on('move_confirmed', function (movedata) {
+            // Logic to handle the move here
+        })
+        
 
 
     });
@@ -137,5 +142,19 @@ function setTeam(self) {
     }
     
 }
+/* Processes the move, emits an event */
+function processMove(self, player, move_data) {
+
+
+}
+
+/* Check whether or not this player can make that move */
+function validateMove(player, move) {
+
+    // Do the teams match up?
+    if (player.team != move.team) { return false; }
+
+}
+
 const game = new Phaser.Game(config);
 window.gameLoaded();
