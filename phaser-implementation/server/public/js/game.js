@@ -45,12 +45,26 @@ class ClientGameController {
     this.player = Number(player);
     this.move_state = [];
     this.map_gui = new MapGUI(this.scene, this.mapInfo);
+    this.message_container = new PlayerInfo(this.scene, 10, 10, "");
 
     // Create listeners, and handle them in this game controller 
     eventsRouter.on('node_clicked', this.handle_node_click, this); // Emitted by NodeGraphics
     eventsRouter.on('move_confirmed', this.confirm_move, this); // Emitted by CommitButton
 
+    this.initialise_game();
   }
+
+  initialise_game() {
+    this.map_gui.draw_map(this.mapInfo);
+
+  }
+
+  display_user_message(msg_str) {
+    // Set text in the message container
+
+  }
+
+
 }
 
 // Rewrite of the MapGraphic class 

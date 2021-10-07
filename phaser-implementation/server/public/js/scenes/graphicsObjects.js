@@ -50,9 +50,8 @@ class NodeGraphic extends Phaser.GameObjects.Arc {
 }
 
 class MapGUI {
-    constructor(scene, mapInfo) {
+    constructor(scene) {
         this.scene = scene 
-        this.mapInfo = mapInfo
         this.node_graphics = [];
         this.edge_graphics = [];
     }
@@ -62,15 +61,15 @@ class MapGUI {
         return scaled_xy;
     }
 
-    draw_map() {
+    draw_map(mapInfo) {
         // Draw the edges, then the nodes 
 
         let left, right, x1, y1, x2, y2;
-        for (var i = 0; i < this.mapInfo.edges.length; i++) {
-            var edge = this.mapInfo.edges[i];
+        for (var i = 0; i < mapInfo.length; i++) {
+            var edge = mapInfo.edges[i];
             [left, right] = edge;
-            [x1, y1] = this.scale_node_position(this.mapInfo.positions[left], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
-            [x2, y2] = this.scale_node_position(this.mapInfo.positions[right], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
+            [x1, y1] = this.scale_node_position(mapInfo.positions[left], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
+            [x2, y2] = this.scale_node_position(mapInfo.positions[right], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
             var drawn_edge = new EdgeGraphic(this.scene,
                 PHASER_RENDER_CONFIG.image_centre.x,
                 PHASER_RENDER_CONFIG.image_centre.y,
@@ -84,16 +83,16 @@ class MapGUI {
         }
 
         let x, y; 
-        for (var i = 0; i < this.mapInfo.positions.length; i++) {
-            [x, y] = this.scale_node_position(this.mapInfo.positions[i], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
+        for (var i = 0; i < mapInfo.positions.length; i++) {
+            [x, y] = this.scale_node_position(mapInfo.positions[i], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
             var circle = new NodeGraphic(this.scene, i, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1);
             this.node_graphics.push(circle);
         }
 
         // Colour occupied nodes
-        this.node_graphics[this.mapInfo.characters.robber].setFillStyle(PHASER_RENDER_CONFIG.colours.red, 1);
-        this.node_graphics[this.mapInfo.characters.honey].setFillStyle(PHASER_RENDER_CONFIG.colours.yellow, 1);
-        this.node_graphics[this.mapInfo.characters.cop].setFillStyle(PHASER_RENDER_CONFIG.colours.green, 1);
+        this.node_graphics[mapInfo.characters.robber].setFillStyle(PHASER_RENDER_CONFIG.colours.red, 1);
+        this.node_graphics[mapInfo.characters.honey].setFillStyle(PHASER_RENDER_CONFIG.colours.yellow, 1);
+        this.node_graphics[mapInfo.characters.cop].setFillStyle(PHASER_RENDER_CONFIG.colours.green, 1);
 
 
 
