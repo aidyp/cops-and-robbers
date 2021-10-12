@@ -1,6 +1,7 @@
 import { CommitButton } from '../js/scenes/commitButton.js'
 import { eventsRouter } from '../js/scenes/eventsRouter.js'
-import { PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI } from './scenes/graphicsObjects.js';
+import { EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI } from './scenes/graphicsObjects.js';
+import { PHASER_RENDER_CONFIG } from './scenes/renderConfig.js';
 
 /* Phaser Config setup */
 var config = {
@@ -56,13 +57,18 @@ class ClientGameController {
 
   initialise_game() {
     this.map_gui.draw_map(this.mapInfo);
+    this.display_user_message(`You are player:${this.player}`);
+    this.commit_button = new CommitButton(this.scene)
 
   }
+
 
   display_user_message(msg_str) {
     // Set text in the message container
 
   }
+
+  move_confirmed
 
 
 }

@@ -1,4 +1,5 @@
-import { eventsRouter } from '../scenes/eventsRouter.js'
+import { eventsRouter } from '../scenes/eventsRouter.js';
+import { PHASER_RENDER_CONFIG, alternate_hex_encoding } from './renderConfig.js';
 
 class CommitButton extends Phaser.GameObjects.Text {
     constructor(scene) {
@@ -11,9 +12,15 @@ class CommitButton extends Phaser.GameObjects.Text {
     }
 
     enableButtonClick() {
+        // Change colour to blue 
+        this.setColor(alternate_hex_encoding(PHASER_RENDER_CONFIG.colours.blue));
         this.setInteractive({ useHandCursor: true})
             .on('pointerdown', () => this.handleButtonClick());
         
+    }
+
+    disableButtonClick() {
+
     }
 
     handleButtonClick() {

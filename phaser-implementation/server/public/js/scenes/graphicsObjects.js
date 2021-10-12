@@ -1,23 +1,7 @@
 import { eventsRouter } from "./eventsRouter.js";
+import { PHASER_RENDER_CONFIG } from "./renderConfig.js";
 
-/* Rendering constants for drawing */
-var PHASER_RENDER_CONFIG = {
-    colours: {
-      blue: 0x0000FF,
-      green: 0x00FF00,
-      yellow: 0xFFFF00,
-      red: 0xFF0000,
-      white: 0xFFFFFF,
-    },
-    node_size: 5,
-    line_width: 2,
-    image_centre: {
-      x: 0,
-      y: 0
-    },
-    width: 800,
-    height: 600
-};
+
 
 class PlayerInfo extends Phaser.GameObjects.Text {
     constructor(scene, x, y, text, style) {
@@ -108,5 +92,5 @@ class MapGUI {
     }
 }
 
-export {PHASER_RENDER_CONFIG, EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI};
+export { EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI};
 
