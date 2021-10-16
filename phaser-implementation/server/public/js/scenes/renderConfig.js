@@ -8,6 +8,11 @@ var PHASER_RENDER_CONFIG = {
       white: 0xFFFFFF,
       grey: 0x808080
     },
+    // Some Phaser objects prefer a different colour representation
+    text_colours: {
+      blue: '#0000FF',
+      grey: '#808080'
+    },
     node_size: 5,
     line_width: 2,
     image_centre: {

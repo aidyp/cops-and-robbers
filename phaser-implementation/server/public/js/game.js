@@ -68,8 +68,6 @@ class ClientGameController {
 
   }
 
-  move_confirmed
-
 
 }
 
@@ -78,7 +76,7 @@ class MapGraphic {
   constructor(scene, map_info, player) {
     this.scene = scene;
     this.map = map_info;
-    this.player = Number(player); //Keys are integers at the moment, so cast
+    this.player = Number(player); // Need to convert between TEAM and PLAYER
     this.move_state = [];
 
     // Initialise arrays of game objects
@@ -150,6 +148,7 @@ class MapGraphic {
   }
 
   confirm_move() {
+    eventsRouter.emit('move_to_send', this.move_state);
 
   }
 
@@ -230,13 +229,22 @@ function create() {
   });
 
   this.socket.on('newMap', function (mapInfo) {
-    const network_map = new MapGraphic(self, mapInfo, team);
+    let starting_position
+    if (team === 0) {
+      starting_position = mapInfo.characters.cop
+    }
+    else {
+      starting_position = mapInfo.characters.robber
+    }
+    const network_map = new MapGraphic(self, mapInfo, starting_position);
     network_map.initialise_map();
   })
 
   this.socket.on('newMove', function (move) {
     network_map.update(move);
   })
+
+  eventsRouter.on('move_to_send', (move_data) => this.socket.emit('move_confirmed', move_data));
 }
 
 function update() {}
