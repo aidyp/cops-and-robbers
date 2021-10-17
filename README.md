@@ -1,6 +1,8 @@
 # network_defender
 
-![image-20211017171118388](/home/aidan/.config/Typora/typora-user-images/image-20211017171118388.png)
+
+
+![image](https://raw.githubusercontent.com/aidyp/network-defender/main/pictures/title_ss.png)
 
 
 
