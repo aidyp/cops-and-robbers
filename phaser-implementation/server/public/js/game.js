@@ -89,6 +89,7 @@ class MapGraphic {
 
     // Render relevant information to player
     this.print_out_info();
+    this.game_title = new PlayerInfo(this.scene, 100, 50, "network_defender", {fontFamily: 'Courier', fontSize: '64px'});
     this.button = new CommitButton(this.scene);
     console.log(this.button);
   }

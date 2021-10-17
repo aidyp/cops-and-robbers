@@ -7,7 +7,7 @@ import { PHASER_RENDER_CONFIG} from './renderConfig.js';
 
 class CommitButton extends Phaser.GameObjects.Text {
     constructor(scene) {
-        super(scene, 250, 50, 'COMMIT', {fill: PHASER_RENDER_CONFIG.text_colours.grey});
+        super(scene, 350, 500, 'COMMIT', {fill: PHASER_RENDER_CONFIG.text_colours.grey});
         scene.add.existing(this);
         this.setDisplayOrigin(0, 0);
         // Set up the listener 
