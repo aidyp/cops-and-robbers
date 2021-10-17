@@ -1,5 +1,5 @@
 import { eventsRouter } from '../scenes/eventsRouter.js';
-import { PHASER_RENDER_CONFIG} from './renderConfig.js';
+import { PHASER_RENDER_CONFIG } from './renderConfig.js';
 
 // Text objects in Phaser prefer a different format colour 
 
