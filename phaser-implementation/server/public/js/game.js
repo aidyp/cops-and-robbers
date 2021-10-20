@@ -104,7 +104,7 @@ class MapGraphic {
     var scaled_xy = [(node_position[0] * width), (node_position[1] * height)];
     return scaled_xy;
   }
-  initialise_map() {
+  draw_map() {
     // Draws the map for the first time. You should only have to do this once
     console.log('Drawing Map');
 
@@ -112,7 +112,6 @@ class MapGraphic {
     Object.keys(this.map.positions).forEach(function(key) {
       let x, y;
       [x, y] = this.scale_node_position(this.map.positions[key], config.width, config.height);
-      console.log(x, y);
       var circle = new NodeGraphic(this.scene, key, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1);
       this.node_graphics.push(circle);
     }.bind(this));
@@ -123,10 +122,8 @@ class MapGraphic {
     for (var i = 0; i < this.map.edges.length; i++) {
       var edge = this.map.edges[i];
       [left, right] = edge;
-      console.log(left, right);
       [x1, y1] = this.scale_node_position(this.map.positions[left], config.width, config.height);
       [x2, y2] = this.scale_node_position(this.map.positions[right], config.width, config.height);
-      console.log(x1, y1, x2, y2);
       // Set the game object to the centre of the screen <-- figure out why!
       var drawn_edge = new EdgeGraphic(this.scene, 
         PHASER_RENDER_CONFIG.image_centre.x, 
@@ -146,6 +143,36 @@ class MapGraphic {
     this.node_graphics[this.map.characters.honey].setFillStyle(PHASER_RENDER_CONFIG.colours.yellow, 1);
 
 
+  }
+
+  clear_map() {
+    // Iterate through the graphics objects and destroy them
+
+    for (var i = 0; i < this.node_graphics.length; i++) {
+      this.node_graphics[i].destroy();
+    }
+    for (var i = 0; i < this.edge_graphics.length; i++) {
+      this.edge_graphics[i].destroy();
+    }
+
+    // Clear the buffers 
+    this.node_graphics = [];
+    this.edge_graphics = [];
+  }
+
+  update(move) {
+    // Change the cop and robber positions 
+    console.log(move);
+    this.map.characters.cop = Number(move["cop"]);
+    this.map.characters.robber = Number(move["rob"]);
+
+    // Update the player <-- Need to fix this, its a bit flakey
+    //this.player = (this.player == 0)
+
+    // Redraw the map 
+
+    this.clear_map();
+    this.draw_map();
   }
 
   confirm_move() {
@@ -205,6 +232,7 @@ function create() {
   this.socket = io();
   this.players = this.add.group();
   let team;
+  let network_map;
   
   this.socket.on('currentPlayers', function(players) {
     Object.keys(players).forEach(function (id) {
@@ -237,11 +265,12 @@ function create() {
     else {
       starting_position = mapInfo.characters.robber
     }
-    const network_map = new MapGraphic(self, mapInfo, starting_position);
-    network_map.initialise_map();
+    network_map = new MapGraphic(self, mapInfo, starting_position);
+    network_map.draw_map();
   })
 
-  this.socket.on('newMove', function (move) {
+  this.socket.on('processedMove', function (move) {
+    console.log(move);
     network_map.update(move);
   })
 

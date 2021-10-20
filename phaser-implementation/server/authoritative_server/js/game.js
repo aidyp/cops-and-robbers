@@ -65,8 +65,17 @@ const mapInfo = {
 
 const PLAYERS = {
     COP: 0,
-    ROB: 1
+    rob: 1
 };
+
+var PLAYER_POSITIONS = {
+    cop: mapInfo.characters.cop,
+    rob: mapInfo.characters.robber
+}
+
+var process = {};
+
+
 // Required for assigning teams at the moment
 var COP_PLAYER_ASSIGNED = false;
 var ROB_PLAYER_ASSIGNED = false;
@@ -179,7 +188,14 @@ function create() {
         });
 
         socket.on('move_confirmed', function (movedata) {
-            console.log(movedata);
+            var emit_move = processMove(self, socket.id, movedata);
+            if (emit_move) {
+                // Update the player positions
+                PLAYER_POSITIONS.cop = process["cop"];
+                PLAYER_POSITIONS.rob = process["rob"];
+                // Emit the updated_move
+                io.emit('processedMove', process);
+            }
         })
         
 
@@ -232,16 +248,58 @@ function setTeam(self) {
     
 }
 /* Processes the move, emits an event */
-function processMove(self, player, move_data) {
+function processMove(self, socket_id, move_data) {
+    // Validate the move
+    console.log(players[socket_id].team);
+    console.log(move_data);
+    var team = (players[socket_id].team == 0) ? "cop" : "rob";
+    var valid = validateMove(team, move_data[0]);
+
+    
+    // Add the move to this turns process state
+    if (valid) {
+        // Extract the target node. Luckily for us, it's always the second
+        // (TODO, adjust this in case someone is tricky)
+        var new_position = move_data[0][1];
+        // Push the move if it doesn't already exist
+        if (!(team in process)) {
+            process[team] = new_position;
+        }
+    }
+
+    // Check whether or not it's time to emit a new move
+    if (Object.keys(process).length === 2) {
+        return true;
+    }
+    return false;
 
 
+    
+
+}
+
+function check_edge_exists(node_1, node_2) {
+    for (var i = 0; i < mapInfo.edges.length; i++) {
+        var edge = mapInfo.edges[i];
+        if (edge.includes(node_1) && edge.includes(node_2)) {
+            return true
+        }
+    }
+    return false;
 }
 
 /* Check whether or not this player can make that move */
 function validateMove(player, move) {
 
-    // Do the teams match up?
-    if (player.team != move.team) { return false; }
+    // Check that the edge exists 
+    var edge_exists = check_edge_exists(move[0], move[1]);
+    
+    // Check that the player exists on one of those edges
+    var player_node = PLAYER_POSITIONS[player];
+    var player_present = move.includes(player_node);
+
+    return (edge_exists && player_present);
+    
 
 }
 
