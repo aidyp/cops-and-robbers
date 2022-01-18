@@ -6,7 +6,7 @@
 
 
 
-I've have to learn JavaScript. What better way than by making a game? 
+I have to learn JavaScript. What better way than by making a game? 
 
 
 
