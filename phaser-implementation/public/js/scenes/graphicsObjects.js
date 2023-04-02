@@ -47,9 +47,10 @@ class MapGUI {
 
     draw_map(mapInfo) {
         // Draw the edges, then the nodes 
+        console.log(mapInfo);
 
         let left, right, x1, y1, x2, y2;
-        for (var i = 0; i < mapInfo.length; i++) {
+        for (var i = 0; i < mapInfo.edges.length; i++) {
             var edge = mapInfo.edges[i];
             [left, right] = edge;
             [x1, y1] = this.scale_node_position(mapInfo.positions[left], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
@@ -67,7 +68,7 @@ class MapGUI {
         }
 
         let x, y; 
-        for (var i = 0; i < mapInfo.positions.length; i++) {
+        for (var i = 0; i < mapInfo.nodes.length; i++) {
             [x, y] = this.scale_node_position(mapInfo.positions[i], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
             var circle = new NodeGraphic(this.scene, i, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1);
             this.node_graphics.push(circle);
