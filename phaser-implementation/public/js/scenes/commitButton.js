@@ -30,7 +30,7 @@ class CommitButton extends Phaser.GameObjects.Text {
     }
 
     handleButtonClick() {
-        eventsRouter.emit('move_confirmed');
+        eventsRouter.emit('player_committed_move');
     }
 }
 

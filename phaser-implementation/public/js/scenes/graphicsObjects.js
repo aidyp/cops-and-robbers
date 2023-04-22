@@ -36,8 +36,8 @@ class NodeGraphic extends Phaser.GameObjects.Arc {
 class MapGUI {
     constructor(scene) {
         this.scene = scene 
-        this.node_graphics = [];
-        this.edge_graphics = [];
+        this.node_graphics = {};
+        this.edge_graphics = {};
     }
 
     scale_node_position(node_position, width, height) {
@@ -63,7 +63,7 @@ class MapGUI {
                 x2,
                 y2,
                 PHASER_RENDER_CONFIG.colours.white);
-                this.edge_graphics.push(drawn_edge);
+                this.edge_graphics[i] = drawn_edge;
 
         }
 
@@ -71,7 +71,7 @@ class MapGUI {
         for (var i = 0; i < mapInfo.nodes.length; i++) {
             [x, y] = this.scale_node_position(mapInfo.positions[i], PHASER_RENDER_CONFIG.width, PHASER_RENDER_CONFIG.height);
             var circle = new NodeGraphic(this.scene, i, x, y, PHASER_RENDER_CONFIG.node_size, PHASER_RENDER_CONFIG.colours.white, 1);
-            this.node_graphics.push(circle);
+            this.node_graphics[i] = circle;
         }
 
         // Colour occupied nodes
@@ -83,14 +83,24 @@ class MapGUI {
 
     }
 
-    highlight_node(node, colour) {
-        this.node_graphics[node].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, colour, 1);
+    highlight_node(node_id, colour) {
+        this.node_graphics[node_id].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, colour, 1);
     }
 
-    clear_highlighted_node(node) {
-        var base_colour = this.node_graphics[node].fillColor;
-        this.node_graphics[node].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, base_colour, 1);
+    clear_all_nodes_but(node_id) {
+        for (var i = 0; i < Object.keys(this.node_graphics).length
+        ; i++) {
+            if (i === node_id) {continue}
+            this._clear_highlighted_node(i);
+        }
     }
+
+    _clear_highlighted_node(node_id) {
+        var base_colour = this.node_graphics[node_id].fillColor;
+        this.node_graphics[node_id].setStrokeStyle(PHASER_RENDER_CONFIG.line_width, base_colour, 1);
+    }
+
+
 }
 
 export { EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI};
