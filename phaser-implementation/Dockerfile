@@ -25,4 +25,4 @@ FROM node:16-alpine
 
  # Expose & Run
  EXPOSE 8081
- ENTRYPOINT [ "nodemon", "server/index.js"]
+ ENTRYPOINT [ "nodemon", "server.js"]

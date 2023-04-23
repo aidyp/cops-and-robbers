@@ -4,9 +4,9 @@ const express = require('express');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-app.use(express.static(__dirname + '/public'));
+app.use(express.static('public'));
 app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile('index.html');
 });
 const Datauri = require('datauri/parser');
 const datauri = new Datauri();
