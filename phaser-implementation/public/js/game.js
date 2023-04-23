@@ -3,6 +3,7 @@ import { eventsRouter } from './scenes/eventsRouter.js'
 import { StartButton } from './scenes/startButton.js'
 import { EdgeGraphic, NodeGraphic, PlayerInfo, MapGUI } from './scenes/graphicsObjects.js';
 import { PHASER_RENDER_CONFIG } from './scenes/renderConfig.js';
+import { io } from "socket.io-client";
 
 /* Phaser Config setup */
 var config = {
