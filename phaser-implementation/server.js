@@ -1,4 +1,4 @@
-const path = require('path');
+path = require('path');
 const jsdom = require('jsdom');
 const express = require('express');
 const app = express();
@@ -54,8 +54,6 @@ const mapInfo = {
     }
 };
 
-
-
 const PLAYERS = {
     COP: 0,
     ROB: 1,
@@ -92,6 +90,7 @@ io.on('connection', function (socket) {
     // when a player disconnects, remove them from our players object
     socket.on('disconnect', function () {
       console.log('user disconnected: ', socket.id);
+      freePlayer(players[socket.id])
       delete players[socket.id];
       // emit a message to all players to remove this player
       io.emit('remove', socket.id);
@@ -105,7 +104,11 @@ io.on('connection', function (socket) {
             console.log("Telling all clients to start the game");
             io.sockets.emit("startGame", mapInfo);
         }
-    })
+    });
+
+    socket.on('proposed_move', (move) => {
+        // Move handling goes here
+    });
 });
 
 function serverReady() {
@@ -144,6 +147,12 @@ function checkPlayers(self) {
     console.log(`Number of players is ${num_players}`);
     return (num_players < 2);
 }
+
+function freePlayer(player) {
+    if (player.role === PLAYERS.ROB) { ROB_PLAYER_ASSIGNED = false};
+    if (player.role === PLAYERS.COP) { COP_PLAYER_ASSIGNED = false};
+}
+
 /* Sets the team of the player. Stub for now */
 function setTeam(self) {
     if (!(COP_PLAYER_ASSIGNED)) {

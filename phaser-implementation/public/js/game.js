@@ -23,7 +23,8 @@ class GameController {
     this.scene = scene;
     this.set_up_listeners();
     this.role = null;
-    this.map = null;
+    this.game_state = null;
+    this.updated = false;
     this.socket = socket
   }
 
@@ -31,10 +32,12 @@ class GameController {
     eventsRouter.on('start_button_clicked', this.request_game_start, this);
     eventsRouter.on('server_assigned_role', this.set_role, this);
     eventsRouter.on('server_started_game', this.start_game, this);
+    eventsRouter.on('player_committed_move', this.send_move_to_server, this);
+    eventsRouter.on('node_clicked', this.handle_node_click, this);
   }
 
   set_role(role) {
-    if (this.role != null) {return} // for idempotence
+    if (this.role != null) {return} // Idempotence
 
     console.log(`Assigned ${role} role`);
     console.log("Setting role");
@@ -56,17 +59,62 @@ class GameController {
    * Creates a new game for the client
    */
   start_game(game_data) {
-    if (this.map != null) {return} // Idempotence
+    if (this.game_state != null) {return} // Idempotence
+    this.game_state = game_data; 
     this.map = new MapGUI(this.scene);
-    this.map.draw_map(game_data);
-
+    this.map.draw_map(this.game_state);
+    this.player_node = (this.role == 0 ? this.game_state.characters.cop : this.game_state.characters.robber);
+    this.colour = (this.role == 0 ? PHASER_RENDER_CONFIG.colours.green : PHASER_RENDER_CONFIG.colours.red);
+    console.log(this.player_node);
+    this.commit_button = new CommitButton(this.scene);
   }
+
   /**
    * Clientside logic for handling server
    * game update message
    */
-  update_game_state() {
+  update_game_state(game_data) {
+    if (this.updated) {return} // Idempotence
+    this.game_state = game_data;
+    this.updated = true;
+    this.map.draw_map(this.game_state);
   }
+
+  /**
+   * On a committed move,
+   * send it to the server
+   */
+  send_move_to_server() {
+    const client_move_msg = {
+      'move': this.proposed_move,
+      'player': this.role
+    }
+    this.socket.emit('proposed_move', client_move_msg);
+    this.updated = false;
+  }
+
+  handle_node_click(node_id) {
+    // Check if the move is 'legal'
+    if (!(this._check_edge_exists(this.player_node, node_id))) {return}
+    
+    this.map.highlight_node(node_id, this.colour);
+    this.map.clear_all_nodes_but(node_id);
+    this.propose_move(node_id);
+  }
+
+  propose_move(node_id) {
+    this.proposed_move = node_id;
+  }
+
+  _check_edge_exists(node_1, node_2) {
+    for (var i = 0; i < this.game_state.edges.length; i++) {
+        var edge = this.game_state.edges[i];
+        if (edge.includes(node_1) && edge.includes(node_2)) {
+            return true
+        }
+    }
+    return false;
+}
 
 }
 
@@ -83,7 +131,6 @@ function update() {
     eventsRouter.emit('server_assigned_role', role) 
   });
   this.socket.on('startGame', function(game_data) {
-    console.log("Starting the game");
     eventsRouter.emit('server_started_game', game_data)
   });
   this.socket.on('updateGame', function(game_data) {
@@ -109,66 +156,4 @@ class SocketHandler {
     this.socket.emit('move_confirmed', {x: move});
   }
 
-}
-
-class ClientGameController {
-  constructor(scene, socket, map_info, player) {
-    this.scene = scene; 
-    this.mapInfo = map_info;
-    this.player = Number(player);
-    this.move_state = [];
-    this.map_gui = new MapGUI(this.scene, this.mapInfo);
-    this.message_container = new PlayerInfo(this.scene, 10, 10, "");
-
-    // Create listeners, and handle them in this game controller 
-    eventsRouter.on('node_clicked', this.handle_node_click, this); // Emitted by NodeGraphics
-    eventsRouter.on('move_confirmed', this.confirm_move, this); // Emitted by CommitButton
-
-    this.initialise_game();
-  }
-
-  initialise_game() {
-    this.map_gui.draw_map(this.mapInfo);
-    this.display_user_message(`You are player:${this.player}`);
-    this.commit_button = new CommitButton(this.scene)
-
-  }
-
-
-  display_user_message(msg_str) {
-    // Set text in the message container
-
-  }
-
-
-}
-
-// Rewrite of the MapGraphic class 
-class MapGraphic {
-  constructor(scene, map_info, player) {
-    this.scene = scene;
-    this.map = map_info;
-    this.player = Number(player); // Need to convert between TEAM and PLAYER
-    this.move_state = [];
-
-    // Initialise arrays of game objects
-    this.node_graphics = [];
-    this.edge_graphics = [];
-
-    // Create listeners <-- Clean this up eventually
-    eventsRouter.on('node_clicked', this.handle_node_click, this); // Emitted by NodeGraphics
-    eventsRouter.on('move_confirmed', this.confirm_move, this); // Emitted by CommitButton
-
-    // Render relevant information to player
-    this.print_out_info();
-    this.game_title = new PlayerInfo(this.scene, 100, 50, "network_defender", {fontFamily: 'Courier', fontSize: '64px'});
-    this.button = new CommitButton(this.scene);
-    console.log(this.button);
-  }
-
-  print_out_info() {
-    var msg_str = "You are player: ".concat(String(this.player));
-    console.log(msg_str);
-    var text = new PlayerInfo(this.scene, 10, 10, msg_str);
-  }
 }
