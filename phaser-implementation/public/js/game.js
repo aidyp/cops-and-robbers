@@ -26,12 +26,14 @@ class GameController {
     this.game_state = null;
     this.updated = false;
     this.socket = socket
+    this.committed = false;
   }
 
   set_up_listeners() {
     eventsRouter.on('start_button_clicked', this.request_game_start, this);
     eventsRouter.on('server_assigned_role', this.set_role, this);
     eventsRouter.on('server_started_game', this.start_game, this);
+    eventsRouter.on('server_updated_game', this.update_game_state, this);
     eventsRouter.on('player_committed_move', this.send_move_to_server, this);
     eventsRouter.on('node_clicked', this.handle_node_click, this);
   }
@@ -73,11 +75,25 @@ class GameController {
    * Clientside logic for handling server
    * game update message
    */
-  update_game_state(game_data) {
+  update_game_state(update_data) {
     if (this.updated) {return} // Idempotence
-    this.game_state = game_data;
+    console.log(update_data);
+    this.game_state.characters.robber = update_data.rob
+    this.game_state.characters.cop = update_data.cop
     this.updated = true;
+    this.player_node = (this.role == 0 ? this.game_state.characters.cop : this.game_state.characters.robber);
+    if (update_data.winner == 'cop' || update_data.winner == 'rob') {
+      this.handle_end_state(update_data.winner)
+      return;
+    }
+    console.log(this.game_state);
     this.map.draw_map(this.game_state);
+    this.committed = false;
+  }
+
+  handle_end_state(winner) {
+    this.map.draw_map(this.game_state);
+    console.log(`${winner} won the game!`);
   }
 
   /**
@@ -85,11 +101,13 @@ class GameController {
    * send it to the server
    */
   send_move_to_server() {
+    if (this.committed) {return}
     const client_move_msg = {
       'move': this.proposed_move,
       'player': this.role
     }
     this.socket.emit('proposed_move', client_move_msg);
+    this.committed = true;
     this.updated = false;
   }
 
@@ -103,7 +121,7 @@ class GameController {
   }
 
   propose_move(node_id) {
-    this.proposed_move = node_id;
+    this.proposed_move = [this.player_node, node_id];
   }
 
   _check_edge_exists(node_1, node_2) {
@@ -133,7 +151,8 @@ function update() {
   this.socket.on('startGame', function(game_data) {
     eventsRouter.emit('server_started_game', game_data)
   });
-  this.socket.on('updateGame', function(game_data) {
+  this.socket.on('updateGame', function(update_data) {
+    eventsRouter.emit('server_updated_game', update_data);
     console.log("Updating the game");
   })
 }

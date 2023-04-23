@@ -75,8 +75,10 @@ class MapGUI {
         }
 
         // Colour occupied nodes
-        this.node_graphics[mapInfo.characters.robber].setFillStyle(PHASER_RENDER_CONFIG.colours.red, 1);
+        // For now the order will help visually show who has won
+        // But to change after prototyping
         this.node_graphics[mapInfo.characters.honey].setFillStyle(PHASER_RENDER_CONFIG.colours.yellow, 1);
+        this.node_graphics[mapInfo.characters.robber].setFillStyle(PHASER_RENDER_CONFIG.colours.red, 1);  
         this.node_graphics[mapInfo.characters.cop].setFillStyle(PHASER_RENDER_CONFIG.colours.green, 1);
 
 

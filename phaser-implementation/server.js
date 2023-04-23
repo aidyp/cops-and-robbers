@@ -107,7 +107,18 @@ io.on('connection', function (socket) {
     });
 
     socket.on('proposed_move', (move) => {
-        // Move handling goes here
+        console.log(socket.id);
+        console.log(move);
+        if (processMove(socket.id, move)) {
+            console.log(process);
+            const gameUpdate = process;
+            PLAYER_POSITIONS.cop = process.cop;
+            PLAYER_POSITIONS.rob = process.rob;
+            io.sockets.emit("updateGame", gameUpdate);
+            process = {};
+
+        }
+        
     });
 });
 
@@ -167,19 +178,18 @@ function setTeam(self) {
     
 }
 /* Processes the move, emits an event */
-function processMove(self, socket_id, move_data) {
+function processMove(socket_id, move_data) {
     // Validate the move
-    console.log(players[socket_id].team);
-    console.log(move_data);
-    var team = (players[socket_id].team == 0) ? "cop" : "rob";
-    var valid = validateMove(team, move_data[0]);
+    console.log(players[socket_id].role);
+    var team = (players[socket_id].role == 0) ? "cop" : "rob";
+    var valid = validateMove(team, move_data.move);
 
     
     // Add the move to this turns process state
     if (valid) {
         // Extract the target node. Luckily for us, it's always the second
         // (TODO, adjust this in case someone is tricky)
-        var new_position = move_data[0][1];
+        var new_position = move_data.move[1];
         // Push the move if it doesn't already exist
         if (!(team in process)) {
             process[team] = new_position;
@@ -188,6 +198,9 @@ function processMove(self, socket_id, move_data) {
 
     // Check whether or not it's time to emit a new move
     if (Object.keys(process).length === 2) {
+        process.winner = 'none'
+        if (process.rob == mapInfo.characters.honey) {process.winner = 'rob'}
+        if (process.cop == process.rob) {process.winner = 'cop'}
         return true;
     }
     return false;
